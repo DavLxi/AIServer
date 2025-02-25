@@ -31,11 +31,7 @@ def login():
     print(data)
 
     # 转发请求到目标服务器
-    if request.method == 'POST':
-        response = requests.post(url, json=data, headers=headers)
-        print(url)
-    else:
-        response = requests.get(url, params=data, headers=headers)
+    response = requests.post(url, json=data, headers=headers)
 
     # 返回目标服务器的响应
     return jsonify(response.json())
@@ -58,13 +54,65 @@ def register():
     print(url)
 
     # 转发请求到目标服务器
-    if request.method == 'POST':
-        response = requests.post(url, json=data, headers=headers)
-    else:
-        response = requests.get(url, params=data, headers=headers)
+    response = requests.post(url, json=data, headers=headers)
 
     # 返回目标服务器的响应
     return jsonify(response.json())
+
+# 获取知识库列表
+@app.route('/v1/api/knowledge_base/list', methods=['GET', 'POST', 'OPTIONS'])
+def getKonwledgeList():
+    if request.method == 'OPTIONS':
+        # 处理预检请求
+        return jsonify(success=True)
+
+    # print(request)
+    # 获取Authorization头部信息
+    api_key = request.headers.get('Authorization')
+
+    if not api_key:
+        return jsonify({"error": "Authorization header is missing"}), 400
+
+    url = source_server + '/v1/api/knowledge_base/list'  # 目标服务器的 URL
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': api_key  # 传递Authorization头部
+    }
+    
+    response = requests.get(url, headers=headers)
+
+    # 返回目标服务器的响应
+    return jsonify(response.json())
+
+# 新建知识库列表
+@app.route('/v1/api/knowledge_base/new', methods=['GET', 'POST', 'OPTIONS'])
+def createKonwledge():
+    if request.method == 'OPTIONS':
+        # 处理预检请求
+        return jsonify(success=True)
+
+    # 获取客户端发送的 JSON 数据
+    data = request.get_json()
+
+    # 获取Authorization头部信息
+    api_key = data.get('Authorization')
+    print(api_key)
+    if not api_key:
+        return jsonify({"error": "Authorization header is missing"}), 400
+
+    url = source_server + data.get('interface')  # 目标服务器的 URL
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': api_key  # 传递Authorization头部
+    }
+    print(url)
+
+    # 转发请求到目标服务器
+    response = requests.post(url, json=data, headers=headers)
+
+    # 返回目标服务器的响应
+    return jsonify(response.json())
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # 在本地 5000 端口运行
